@@ -18,7 +18,7 @@ usage(){
 
 execute_test_case(){
   echo "Now deploying to test machine."
-  ssh ec2-user@$machine_name "mkdir -p $HOME_DIR/$DIR_NAME"    sudo docker-compose up --no-build -d
+#  ssh ec2-user@$machine_name "mkdir -p $HOME_DIR/$DIR_NAME"    sudo docker-compose up --no-build -d
     sleep 5
     status=`curl --write-out "%{http_code}\n" --silent --output /dev/null "http://127.0.0.1:5000"`
     if [ "$status" == "200" ];
@@ -34,8 +34,8 @@ execute_prod_case(){
   echo "Now deploying to prod machine."
   if [ $MY_IP == $DEPLOY_IP ];
 	then
-	cd /home/ec2-user/BynetFinalProject/
-	sudo docker pull avielderhy/finalproject:latest
+#	cd /home/ec2-user/BynetFinalProject/
+	#sudo docker pull avielderhy/finalproject:latest
 	sleep 1
 	docker-compose up --no-build -d
 	fi
