@@ -6,8 +6,6 @@ services:
   app:
   
     image: elhananw/final_project
-
-    build: .
       
     ports: 
       
