@@ -16,7 +16,7 @@ usage(){
 
 execute_test_case(){
   echo "Now deploying to test machine."
-  scp $WORKSPACE/docker-compose.yml ec2-user@$machine:$HOME_DIR/
+  scp -o StrictHostKeyChecking=no docker-compose.yml test.sh ec2-user@$machine:$HOME_DIR/
   ssh -o StrictHostKeyChecking=no ec2-user@$machine 'docker-compose up --no-build -d'
   sleep 3
 
