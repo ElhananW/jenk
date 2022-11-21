@@ -6,7 +6,7 @@
 
 #VARS#
 HOME_DIR=/home/ec2-user
-PIPLINE_WORKSPACE=/var/lib/jenkins/workspace/proj
+PIPLINE_WORKSPACE=/var/lib/jenkins/workspace/proj@2
 DIR_NAME=proj
 machine_name=$1
 
