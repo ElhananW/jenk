@@ -1,27 +1,21 @@
 #!/bin/bash
 
-                 ### USAGE ###
-### THIS IS A BASH SCRIPT TO DEPLOY MY WEB APP
-### Accepts one argument, the host name machine.######
-
-#VARS#
 HOME_DIR=/home/ec2-user
 PIPLINE_WORKSPACE=/var/lib/jenkins/workspace/proj@2
 DIR_NAME=proj
 machine_name=$1
 
+usage(){
+  echo "Usage: ./deploy.sh [test | prod]"
+  exit 1
 
-if [ $# -ne 1 ]; then
-    echo "please enter ONLY one argument \nArgument must be [prod | test]"
-    exit 1
+if [ $# -ne 1 ];
+then
+    usage
 fi
 
-clean_previous_builds(){
-    # remove all images and containers
-    echo "Remove all containers and images"
-    ssh ec2-user@$machine_name "cd /home/ec2-user/$DIR_NAME; docker-compose down -v"
-    ssh ec2-user@$machine_name "cd /home/ec2-user/$DIR_NAME; docker system prune -a --volumes -f"
-    }
+
+ 
 check_args() {
     case "$machine_name" in
     "test") echo "Deploy to TEST machine" ;;
@@ -42,7 +36,11 @@ main (){
     # Copy docker compose to machine
     echo "Copy docker-compose to $machine_name"
     scp $PIPLINE_WORKSPACE/docker-compose.yml ec2-user@$machine_name:$HOME_DIR/$DIR_NAME
-    clean_previeous_builds
+    clean_previous_builds(){
+    # remove all images and containers
+    echo "Remove all containers and images"
+    ssh ec2-user@$machine_name "cd /home/ec2-user/$DIR_NAME; docker-compose down -v"
+    ssh ec2-user@$machine_name "cd /home/ec2-user/$DIR_NAME; docker system prune -a -f"
     echo "run docker compose up"
     ssh ec2-user@$machine_name "cd /home/ec2-user/$DIR_NAME; docker-compose up -d --no-build"
 
