@@ -1,11 +1,7 @@
 #!/bin/bash
 
-                 ### USAGE ###
-### THIS IS A BASH SCRIPT TO DEPLOY MY WEB APP
-### Accepts one argument, the host name machine.######
 
-#VARS#
-HOME_DIR=/home/ec2-user
+USER=/home/ec2-user
 PIPLINE_WORKSPACE=/var/lib/jenkins/workspace/proj@2
 DIR_NAME=proj
 machine_name=$1
@@ -16,8 +12,31 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
+usage(){
+  echo "Usage: ./deploy.sh [test | prod]"
+  exit 1
+
+clean_previous_builds(){
+    # remove all images and containers
+    echo "Remove all containers and images"
+    ssh ec2-user@$machine_name "cd /home/ec2-user/$DIR_NAME; docker-compose down -v"
+    ssh ec2-user@$machine_name "cd /home/ec2-user/$DIR_NAME; docker system prune -a --volumes -f"
+    }
+}
+in_test_case(){
+    # copy script to test machine
+    echo "Now deploying to Test machine."
+    echo "copy test.sh to Test machine"
+    scp /var/lib/jenkins/workspace/final-project/tests/test.sh ec2-user@$machine:$USER/$DIR_NAME
+    # give permissions to test.sh file
+    ssh ec2-user@test "chmod u+x $USER/$DIR_NAME/test.sh"
+    # RUN TESTS
+    echo "Running tests"
+    ssh ec2-user@test "cd /home/ec2-user/$DIR_NAME; ./test.sh "
+    }
+
 check_args() {
-    case "$machine_name" in
+    case "$machine" in
     "test") echo "Deploy to TEST machine" ;;
     "prod") echo "Deploy to PROD machine" ;;
     *)
@@ -31,32 +50,23 @@ check_args() {
 
 main (){
     # Connecting to machine and create new dir
-    echo "Connecting to $machine_name"
-    ssh ec2-user@$machine_name "mkdir -p $HOME_DIR/$DIR_NAME"
+    echo "Connecting to $machine"
+    ssh ec2-user@$machine "mkdir -p $USER/$DIR_NAME"
     # Copy docker compose to machine
-    echo "Copy docker-compose to $machine_name"
-    scp $PIPLINE_WORKSPACE/docker-compose.yml ec2-user@$machine_name:$HOME_DIR/$DIR_NAME
-    echo "Copy .env to $machine_name"
-    scp $PIPLINE_WORKSPACE/.env ec2-user@$machine_name:$HOME_DIR/$DIR_NAME
-    # remove all images and containers
-    echo "Remove all containers and images"
-    ssh ec2-user@$machine_name "cd /home/ec2-user/$DIR_NAME; docker-compose down -v"
-    ssh ec2-user@$machine_name "cd /home/ec2-user/$DIR_NAME; docker system prune -a --volumes -f"
+    echo "Copy docker-compose to $machine"
+    scp $PIPLINE_WORKSPACE/docker-compose.yml ec2-user@$machine:$USER/$DIR_NAME
+    echo "Copy .env to $machine"
+    scp $PIPLINE_WORKSPACE/.env ec2-user@$machine:$USER/$DIR_NAME
+    clean_previous_builds
     echo "run docker compose up"
-    ssh ec2-user@$machine_name "cd /home/ec2-user/$DIR_NAME; docker-compose up -d --no-build"
+    ssh ec2-user@$machine "cd /home/ec2-user/$DIR_NAME; docker-compose up -d --no-build"
 
-    ## DO TESTS IF YOUR IN TEST MACHINE ##
-    if [ $machine_name == "test" ]; then 
-        # copy script to test machine 
-        echo "copy test.sh to TEST machine"
-        scp /var/lib/jenkins/workspace/final-project/tests/test.sh ec2-user@$machine_name:$HOME_DIR/$DIR_NAME
-        # give permissions to test.sh file
-        ssh ec2-user@test "chmod u+x $HOME_DIR/$DIR_NAME/test.sh"
-        # RUN TESTS
-        echo "Running tests"
-        ssh ec2-user@test "cd /home/ec2-user/$DIR_NAME; ./test.sh " 
-    fi   
+    #in cade of test stage
+    if [ $machine == "test" ];
+    then
+        in_test_case
+    fi
 
 }
 check_args
-main $machine_name
+main $machine
